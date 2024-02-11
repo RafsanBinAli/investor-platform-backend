@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE `Investor` MODIFY `DoB` VARCHAR(191) NULL;

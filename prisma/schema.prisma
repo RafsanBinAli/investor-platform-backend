@@ -1,0 +1,125 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-1.1.x", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Investor {
+  NID            String
+  Username       String     @id
+  fullName       String
+  email          String
+  password       String
+  phone          String
+  DoB            DateTime
+  city           String
+  country        String
+  occupation     String
+  industry       String
+  investmentType String
+  Schedule       Schedule[]
+  Messages       Message[]
+
+  Conversation Conversation[]
+  role         String         @default("investor")
+
+  Notifications Notifications[]
+}
+
+model StartupManager {
+  NID           String
+  Username      String         @id
+  fullName      String
+  email         String
+  password      String
+  phone         String
+  major         String
+  expertArea    String
+  highestDegree String
+  city          String
+  startups      startupInfo[]
+  Schedule      Schedule[]
+  Messages      Message[]
+  Conversation  Conversation[]
+
+  role          String          @default("manager")
+  Notifications Notifications[]
+  
+}
+
+model startupInfo {
+  startupName            String
+  industry               String
+  foundingDate           DateTime
+  location               String
+  tinNumber              String         @id
+  cofounderName          String?
+  coOccupation           String?
+  NID                    String?
+  initialFund            String
+  totalRevenue           String
+  fundingNeeded          String
+  goals                  String         @db.VarChar(500)
+  motivation             String         @db.VarChar(500)
+  briefExplain           String         @db.VarChar(500)
+  Manager                StartupManager @relation(fields: [startupManagerUsername], references: [Username])
+  startupManagerUsername String
+  Schedule               Schedule[]
+}
+
+model Schedule {
+  id Int @id @default(autoincrement())
+
+  date             DateTime
+  investor         Investor?       @relation(fields: [investorUsername], references: [Username])
+  investorUsername String?
+  startupManager   StartupManager? @relation(fields: [managerUsername], references: [Username])
+  managerUsername  String?
+  startupInfo      startupInfo?    @relation(fields: [tinNumber], references: [tinNumber])
+  tinNumber        String?
+}
+
+model Message {
+  id                     Int            @id @default(autoincrement())
+  content                String
+  createdAt              DateTime       @default(now())
+  sender                 String?
+  receiver               String?
+  Investor               Investor       @relation(fields: [investorUsername], references: [Username])
+  investorUsername       String
+  StartupManager         StartupManager @relation(fields: [startupManagerUsername], references: [Username])
+  startupManagerUsername String
+
+  Conversation   Conversation? @relation(fields: [conversationId], references: [id])
+  conversationId Int
+}
+
+model Conversation {
+  id Int @id @default(autoincrement())
+
+  Messages  Message[]
+  createdAt DateTime  @default(now())
+
+  Investor               Investor?       @relation(fields: [investorUsername], references: [Username])
+  investorUsername       String?
+  StartupManager         StartupManager? @relation(fields: [startupManagerUsername], references: [Username])
+  startupManagerUsername String?
+}
+
+model Notifications {
+  id                     Int            @id @default(autoincrement())
+  createdAt              DateTime       @default(now())
+  primaryActor           Investor       @relation(fields: [investorUsername], references: [Username])
+  secondaryActor         StartupManager @relation(fields: [startupManagerUsername], references: [Username])
+  investorUsername       String
+  startupManagerUsername String
+  about                  String
+  meetingTime            DateTime?
+}
